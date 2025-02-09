@@ -16,7 +16,5 @@ namespace TestCaseOne.Models
 
         public string ExpectedResult { get; set; }
 
-
-
     }
 }

@@ -1,6 +1,7 @@
 ﻿using Dapper;
 using System;
 using System.Collections.Generic;
+using System.Data.SQLite;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -18,9 +19,12 @@ namespace TestCaseOne.Repositories
         
         public List<MainFeatures> GetAll ()
         {
-            List<MainFeatures> dataItemList = new List<MainFeatures>();
-            dataItemList = connection.Query<MainFeatures>("select Name from MainFeatures").ToList();
-            return dataItemList;
+            using (var conn = new SQLiteConnection(connection.ConnectionString))
+            {
+                conn.Open();
+                var query = "SELECT Id, Name FROM MainFeatures";  
+                return conn.Query<MainFeatures>(query).ToList();
+            }
         }
 
         public MainFeatures GetDataById(int id)
