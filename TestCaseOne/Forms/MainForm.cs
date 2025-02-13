@@ -1,17 +1,14 @@
 ﻿using Dapper;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Data;
 using System.Data.SQLite;
 using System.Drawing;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using TestCaseOne.Models;
 using TestCaseOne.Repositories;
-
 
 namespace TestCaseOne.Forms
 {
@@ -22,18 +19,18 @@ namespace TestCaseOne.Forms
 
         public MainForm()
         {
-            InitializeComponent();         
+            InitializeComponent();
             SetupDataGridView();
             this.Bounds = Screen.PrimaryScreen.Bounds; // Ekranı tamamen kaplar
         }
 
-        private void MainForm_Load(object sender, EventArgs e)
+        private async void MainForm_Load(object sender, EventArgs e)
         {
             groupBox1.Visible = false;
             dataGridView1.RowHeadersVisible = false;
             dataGridView1.GridColor = Color.White;
-            GetMainFeatures();
-
+            dataGridView1.VirtualMode = false;
+            await GetMainFeaturesAsync();
             dataGridView1.ClearSelection();
         }
 
@@ -47,6 +44,7 @@ namespace TestCaseOne.Forms
 
         private void ConfigureDataGridViewStyle()
         {
+            dataGridView1.VirtualMode = true;
             dataGridView1.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
             dataGridView1.DefaultCellStyle.WrapMode = DataGridViewTriState.True;
             dataGridView1.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
@@ -54,7 +52,7 @@ namespace TestCaseOne.Forms
             dataGridView1.ReadOnly = true;
             dataGridView1.RowTemplate.Height = 50;
             dataGridView1.DefaultCellStyle.Font = DefaultFont;
-            dataGridView1.DefaultCellStyle.BackColor = DefaultBackColor;     
+            dataGridView1.DefaultCellStyle.BackColor = DefaultBackColor;
         }
 
         private void BindDataGridViewEvents()
@@ -67,43 +65,33 @@ namespace TestCaseOne.Forms
 
         private void AddDataGridViewColumns()
         {
-            dataGridView1.Columns.Clear(); // Önce tüm kolonları temizleyelim
-            dataGridView1.Columns.Add("Id", "Id"); // Gizli tutmak istersen Visible=false yap
+            dataGridView1.Columns.Clear();
+            dataGridView1.Columns.Add("Id", "Id");
             dataGridView1.Columns.Add("Name", "Test İsmi");
             dataGridView1.Columns.Add("Info", "Açıklama");
-
-            // Kolonların genişliklerini ayarla
-            dataGridView1.Columns["Id"].Visible = false; // Id kolonunu gizledik
+            dataGridView1.Columns["Id"].Visible = false;
             dataGridView1.Columns["Name"].FillWeight = 70;
             dataGridView1.Columns["Info"].FillWeight = 30;
         }
-
         #endregion
-
 
         #region DataGridView Events
         private void DataGridView1_CellPainting(object sender, DataGridViewCellPaintingEventArgs e)
         {
             if (e.RowIndex >= 0 && e.ColumnIndex >= 0)
             {
-                PaintCellContent(e);
-            }
-        }
-
-        private void PaintCellContent(DataGridViewCellPaintingEventArgs e)
-        {
-            e.PaintBackground(e.ClipBounds, true);
-
-            using (StringFormat format = new StringFormat
-            {
-                Alignment = StringAlignment.Center,
-                LineAlignment = StringAlignment.Center,
-                Trimming = StringTrimming.EllipsisCharacter,
-                FormatFlags = StringFormatFlags.LineLimit | StringFormatFlags.NoWrap
-            })
-            {
-                e.Graphics.DrawString(e.FormattedValue?.ToString(), e.CellStyle.Font, new SolidBrush(e.CellStyle.ForeColor), e.CellBounds, format);
-                e.Handled = true;
+                e.PaintBackground(e.ClipBounds, true);
+                using (StringFormat format = new StringFormat
+                {
+                    Alignment = StringAlignment.Center,
+                    LineAlignment = StringAlignment.Center,
+                    Trimming = StringTrimming.EllipsisCharacter,
+                    FormatFlags = StringFormatFlags.LineLimit | StringFormatFlags.NoWrap
+                })
+                {
+                    e.Graphics.DrawString(e.FormattedValue?.ToString(), e.CellStyle.Font, new SolidBrush(e.CellStyle.ForeColor), e.CellBounds, format);
+                    e.Handled = true;
+                }
             }
         }
 
@@ -119,13 +107,11 @@ namespace TestCaseOne.Forms
         {
             int padding = 5;
             int maxHeight = 0;
-
             foreach (DataGridViewCell cell in row.Cells)
             {
                 int cellHeight = CalculateCellHeight(cell, padding);
                 maxHeight = Math.Max(maxHeight, cellHeight);
             }
-
             row.Height = Math.Max(row.Height, maxHeight);
         }
 
@@ -143,16 +129,14 @@ namespace TestCaseOne.Forms
         #endregion
 
         #region Load Main Features and Test Cases
-        private void GetMainFeatures()
+        private async Task GetMainFeaturesAsync()
         {
             try
             {
                 flowAna.Controls.Clear();
-
                 using (MainFeaturesRepository mainFeaturesRepository = new MainFeaturesRepository())
                 {
-                    var features = mainFeaturesRepository.GetAll();
-
+                    var features = await mainFeaturesRepository.GetAllAsync();
                     foreach (var feature in features)
                     {
                         CreateFeatureButton(feature.Name, feature.Id);
@@ -177,45 +161,47 @@ namespace TestCaseOne.Forms
                 Tag = featureId,
                 Width = 350,
                 Height = 50,
-                Margin = new Padding(1)
+                Margin = new Padding(0)
             };
-
             btn.FlatAppearance.BorderColor = Color.White;
-
-            btn.Click += Button_Click;
+            btn.Click += FeatureButton_Click;
             flowAna.Controls.Add(btn);
         }
 
-        private void LoadTestCases(int featureId)
+        private async void FeatureButton_Click(object sender, EventArgs e)
         {
-            var userStories = FetchTestCases(featureId);
+            if (sender is Button clickedButton && clickedButton.Tag != null)
+            {
+                int featureId = (int)clickedButton.Tag;
+                await LoadTestCasesAsync(featureId);
+            }
+        }
+
+        private async Task LoadTestCasesAsync(int featureId)
+        {
+            var userStories = await FetchTestCasesAsync(featureId);
             UpdateDataGridView(userStories);
         }
 
-        private List<UserStory> FetchTestCases(int featureId)
+        private async Task<List<UserStory>> FetchTestCasesAsync(int featureId)
         {
             using (UserStoryRepositories userStory = new UserStoryRepositories())
             {
-                return userStory.GetAllByModulId(featureId);
+                return await userStory.GetAllByModulIdAsync(featureId);
             }
         }
 
         private void UpdateDataGridView(List<UserStory> userStories)
         {
             dataGridView1.Rows.Clear();
-
             foreach (var userStori in userStories)
             {
-                bool result = userStori.Result; // 0 veya 1 değeri
-                dataGridView1.Rows.Add(userStori.Id, userStori.Name, result);
+                dataGridView1.Rows.Add(userStori.Id, userStori.Name, userStori.Result);
             }
-
             AdjustDataGridViewHeight();
             groupBox1.Visible = dataGridView1.Rows.Count > 0;
-
             dataGridView1.ClearSelection();
         }
-
 
         private void AdjustDataGridViewHeight()
         {
@@ -224,29 +210,32 @@ namespace TestCaseOne.Forms
             int rowCount = dataGridView1.Rows.Count;
             int totalHeight = headerHeight + (rowCount * rowHeight) + 2;
             int maxHeight = 500;
-
             dataGridView1.Height = Math.Min(totalHeight, maxHeight);
             groupBox1.Height = dataGridView1.Height + 20;
         }
         #endregion
 
-        #region Button Events
-        private void Button_Click(object sender, EventArgs e)
-        {
-            if (sender is Button clickedButton && clickedButton.Tag != null)
-            {
-                int featureId = (int)clickedButton.Tag;
-                LoadTestCases(featureId);
-            }
-        }
-
         private void button1_Click(object sender, EventArgs e)
         {
             this.Close();
         }
-        #endregion
+
+        private void button6_Click(object sender, EventArgs e)
+        {
+            MainFeaturesRepository repository = new MainFeaturesRepository();
+            List<string> featureNames = repository.GetFeatureNames();
+
+            if (featureNames.Count > 0)
+            {
+                MainFormEdit listForm = new MainFormEdit(featureNames);
+                listForm.ShowDialog();
+            }
+            else
+            {
+                MessageBox.Show("Veritabanında özellik bulunamadı.", "Uyarı", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
 
 
+        }
     }
 }
-
