@@ -1,6 +1,7 @@
 ﻿using Dapper;
 using System;
 using System.Collections.Generic;
+using System.Data.SQLite;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -11,25 +12,43 @@ namespace TestCaseOne.Repositories
 {
     internal class MainFeaturesRepository :BaseRepositories
     {
-        public MainFeaturesRepository() 
-        { 
-        
-        }
-        
-        public List<MainFeatures> GetAll ()
+        public MainFeaturesRepository()
         {
-            List<MainFeatures> dataItemList = new List<MainFeatures>();
-            dataItemList = connection.Query<MainFeatures>("select Name from MainFeatures").ToList();
-            return dataItemList;
         }
 
-        public MainFeatures GetDataById(int id)
+        // Async versiyonu
+        public async Task<List<MainFeatures>> GetAllAsync()
         {
-            MainFeatures modul = new MainFeatures();
-            var parameters = new {ModulId = id };
-            modul = connection.QueryFirstOrDefault<MainFeatures>("select * from MainFeatures where MainFeatureId = @Id", parameters);
-            return modul;
-        } 
+            using (var conn = new SQLiteConnection(connection.ConnectionString))
+            {
+                await conn.OpenAsync();
+                var query = "SELECT Id, Name FROM MainFeatures";
+                var result = await conn.QueryAsync<MainFeatures>(query);
+                return result.ToList();
+            }
+        }
+
+        // Async olarak GetDataById metodu
+        public async Task<MainFeatures> GetDataByIdAsync(int id)
+        {
+            var parameters = new { Id = id };
+            using (var conn = new SQLiteConnection(connection.ConnectionString))
+            {
+                await conn.OpenAsync();
+                var query = "SELECT * FROM MainFeatures WHERE MainFeatureId = @Id";
+                return await conn.QueryFirstOrDefaultAsync<MainFeatures>(query, parameters);
+            }
+        }
+
+        public List<string> GetFeatureNames()
+        {
+            using (var conn = new SQLiteConnection(connection.ConnectionString))
+            {
+                conn.Open();
+                var query = "SELECT Name FROM MainFeatures";
+                return conn.Query<string>(query).ToList();
+            }
+        }
 
     }
 }

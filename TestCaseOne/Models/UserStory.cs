@@ -10,7 +10,8 @@ namespace TestCaseOne.Models
     {
         public int Id { get; set; }
         public string Name { get; set; }
-        public bool Result { get; set; }
         public int MainFeatureId { get; set; }
+        public bool Result { get; set; }
+        public string Info { get; set; }
     }
 }

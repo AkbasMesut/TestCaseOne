@@ -13,7 +13,12 @@ namespace TestCaseOne.Repositories
         public SQLiteConnection connection;
         public BaseRepositories() 
         {
-        connection = new SQLiteConnection (ConfigurationManager.ConnectionStrings["dbConnection"].ConnectionString);
+            string connectionString = ConfigurationManager.ConnectionStrings["dbConnection"]?.ConnectionString;
+            if (string.IsNullOrEmpty(connectionString))
+            {
+                throw new Exception("Bağlantı dizesi bulunamadı!");
+            }
+            connection = new SQLiteConnection(connectionString);
         }
 
         public void Dispose() 

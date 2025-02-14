@@ -1,64 +1,241 @@
-﻿using System;
+﻿using Dapper;
+using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Data;
+using System.Data.SQLite;
 using System.Drawing;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using TestCaseOne.Models;
 using TestCaseOne.Repositories;
 
 namespace TestCaseOne.Forms
 {
     public partial class MainForm : Form
     {
+        private static readonly Font DefaultFont = new Font("Arial", 12);
+        private static readonly Color DefaultBackColor = Color.LightBlue;
+
         public MainForm()
         {
             InitializeComponent();
-
-            // FlowLayoutPanel ayarlarını yapılandırın
-            flowAna.AutoSize = true; // FlowLayoutPanel'in otomatik boyutlanmasını aktif et
-            flowAna.AutoSizeMode = AutoSizeMode.GrowAndShrink; // İçerik değiştikçe boyutlanmasın
+            SetupDataGridView();
+            this.Bounds = Screen.PrimaryScreen.Bounds; // Ekranı tamamen kaplar
         }
 
-        private void MainForm_Load(object sender, EventArgs e)
+        private async void MainForm_Load(object sender, EventArgs e)
         {
-            GetMainFeatures();
+            groupBox1.Visible = false;
+            dataGridView1.RowHeadersVisible = false;
+            dataGridView1.GridColor = Color.White;
+            dataGridView1.VirtualMode = false;
+            await GetMainFeaturesAsync();
+            dataGridView1.ClearSelection();
         }
 
-        void GetMainFeatures()
+        #region DataGridView Setup
+        private void SetupDataGridView()
         {
-            flowAna.Controls.Clear(); // FlowLayoutPanel'deki mevcut kontrolleri temizle
+            ConfigureDataGridViewStyle();
+            BindDataGridViewEvents();
+            AddDataGridViewColumns();
+        }
 
-            using (MainFeaturesRepository mainFeaturesRepository = new MainFeaturesRepository())
+        private void ConfigureDataGridViewStyle()
+        {
+            dataGridView1.VirtualMode = true;
+            dataGridView1.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+            dataGridView1.DefaultCellStyle.WrapMode = DataGridViewTriState.True;
+            dataGridView1.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+            dataGridView1.MultiSelect = false;
+            dataGridView1.ReadOnly = true;
+            dataGridView1.RowTemplate.Height = 50;
+            dataGridView1.DefaultCellStyle.Font = DefaultFont;
+            dataGridView1.DefaultCellStyle.BackColor = DefaultBackColor;
+        }
+
+        private void BindDataGridViewEvents()
+        {
+            dataGridView1.RowsAdded -= DataGridView1_RowsAdded;
+            dataGridView1.RowsAdded += DataGridView1_RowsAdded;
+            dataGridView1.CellPainting -= DataGridView1_CellPainting;
+            dataGridView1.CellPainting += DataGridView1_CellPainting;
+        }
+
+        private void AddDataGridViewColumns()
+        {
+            dataGridView1.Columns.Clear();
+            dataGridView1.Columns.Add("Id", "Id");
+            dataGridView1.Columns.Add("Name", "Test İsmi");
+            dataGridView1.Columns.Add("Info", "Açıklama");
+            dataGridView1.Columns["Id"].Visible = false;
+            dataGridView1.Columns["Name"].FillWeight = 70;
+            dataGridView1.Columns["Info"].FillWeight = 30;
+        }
+        #endregion
+
+        #region DataGridView Events
+        private void DataGridView1_CellPainting(object sender, DataGridViewCellPaintingEventArgs e)
+        {
+            if (e.RowIndex >= 0 && e.ColumnIndex >= 0)
             {
-                var features = mainFeaturesRepository.GetAll(); // MainFeature tablosundan verileri çek
-
-                foreach (var feature in features)
+                e.PaintBackground(e.ClipBounds, true);
+                using (StringFormat format = new StringFormat
                 {
-                    Button btn = new Button();
-                    btn.BackColor = Color.LightBlue; // Arka plan rengi
-                    btn.FlatStyle = FlatStyle.Flat; // Daha modern bir görünüm
-                    btn.Font = new Font("Arial", 11);
-                    btn.ForeColor = Color.Black;
-                    btn.Text = feature.Name;
-                    btn.Tag = feature.Id;
-                    btn.Width = 350; // Buton genişliği
-                    btn.Height = 50; // Buton yüksekliği
-                    btn.Margin = new Padding(3); // Butonlar arasında boşluk bırak
-                    btn.Click += Button_Click; // Buton tıklama olayını ekle
-                    flowAna.Controls.Add(btn); // Butonu mevcut FlowLayoutPanel'e ekle
+                    Alignment = StringAlignment.Center,
+                    LineAlignment = StringAlignment.Center,
+                    Trimming = StringTrimming.EllipsisCharacter,
+                    FormatFlags = StringFormatFlags.LineLimit | StringFormatFlags.NoWrap
+                })
+                {
+                    e.Graphics.DrawString(e.FormattedValue?.ToString(), e.CellStyle.Font, new SolidBrush(e.CellStyle.ForeColor), e.CellBounds, format);
+                    e.Handled = true;
                 }
             }
-
-            // FlowLayoutPanel boyutu güncellenir, ancak form boyutu değişmez
-            flowAna.PerformLayout(); // FlowLayoutPanel kontrol düzenini güncelle
         }
 
-        private void Button_Click(object sender, EventArgs e)
+        private void DataGridView1_RowsAdded(object sender, DataGridViewRowsAddedEventArgs e)
         {
-            // Buton tıklama olayı işlemleri
+            foreach (DataGridViewRow row in dataGridView1.Rows)
+            {
+                AdjustRowHeight(row);
+            }
+        }
+
+        private void AdjustRowHeight(DataGridViewRow row)
+        {
+            int padding = 5;
+            int maxHeight = 0;
+            foreach (DataGridViewCell cell in row.Cells)
+            {
+                int cellHeight = CalculateCellHeight(cell, padding);
+                maxHeight = Math.Max(maxHeight, cellHeight);
+            }
+            row.Height = Math.Max(row.Height, maxHeight);
+        }
+
+        private int CalculateCellHeight(DataGridViewCell cell, int padding)
+        {
+            if (cell.Value != null)
+            {
+                string text = cell.Value.ToString();
+                Size textSize = TextRenderer.MeasureText(text, cell.Style.Font ?? DefaultFont);
+                int lines = (int)Math.Ceiling((double)textSize.Width / (cell.Size.Width - padding));
+                return (textSize.Height * lines) + padding;
+            }
+            return cell.Size.Height;
+        }
+        #endregion
+
+        #region Load Main Features and Test Cases
+        private async Task GetMainFeaturesAsync()
+        {
+            try
+            {
+                flowAna.Controls.Clear();
+                using (MainFeaturesRepository mainFeaturesRepository = new MainFeaturesRepository())
+                {
+                    var features = await mainFeaturesRepository.GetAllAsync();
+                    foreach (var feature in features)
+                    {
+                        CreateFeatureButton(feature.Name, feature.Id);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Bir hata oluştu: " + ex.Message);
+            }
+        }
+
+        private void CreateFeatureButton(string featureName, int featureId)
+        {
+            Button btn = new Button
+            {
+                BackColor = DefaultBackColor,
+                FlatStyle = FlatStyle.Flat,
+                Font = new Font("Arial", 11),
+                ForeColor = Color.Black,
+                Text = featureName,
+                Tag = featureId,
+                Width = 350,
+                Height = 50,
+                Margin = new Padding(0)
+            };
+            btn.FlatAppearance.BorderColor = Color.White;
+            btn.Click += FeatureButton_Click;
+            flowAna.Controls.Add(btn);
+        }
+
+        private async void FeatureButton_Click(object sender, EventArgs e)
+        {
+            if (sender is Button clickedButton && clickedButton.Tag != null)
+            {
+                int featureId = (int)clickedButton.Tag;
+                await LoadTestCasesAsync(featureId);
+            }
+        }
+
+        private async Task LoadTestCasesAsync(int featureId)
+        {
+            var userStories = await FetchTestCasesAsync(featureId);
+            UpdateDataGridView(userStories);
+        }
+
+        private async Task<List<UserStory>> FetchTestCasesAsync(int featureId)
+        {
+            using (UserStoryRepositories userStory = new UserStoryRepositories())
+            {
+                return await userStory.GetAllByModulIdAsync(featureId);
+            }
+        }
+
+        private void UpdateDataGridView(List<UserStory> userStories)
+        {
+            dataGridView1.Rows.Clear();
+            foreach (var userStori in userStories)
+            {
+                dataGridView1.Rows.Add(userStori.Id, userStori.Name, userStori.Result);
+            }
+            AdjustDataGridViewHeight();
+            groupBox1.Visible = dataGridView1.Rows.Count > 0;
+            dataGridView1.ClearSelection();
+        }
+
+        private void AdjustDataGridViewHeight()
+        {
+            int headerHeight = dataGridView1.ColumnHeadersHeight;
+            int rowHeight = dataGridView1.RowTemplate.Height;
+            int rowCount = dataGridView1.Rows.Count;
+            int totalHeight = headerHeight + (rowCount * rowHeight) + 2;
+            int maxHeight = 500;
+            dataGridView1.Height = Math.Min(totalHeight, maxHeight);
+            groupBox1.Height = dataGridView1.Height + 20;
+        }
+        #endregion
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            this.Close();
+        }
+
+        private void button6_Click(object sender, EventArgs e)
+        {
+            MainFeaturesRepository repository = new MainFeaturesRepository();
+            List<string> featureNames = repository.GetFeatureNames();
+
+            if (featureNames.Count > 0)
+            {
+                MainFormEdit listForm = new MainFormEdit(featureNames);
+                listForm.ShowDialog();
+            }
+            else
+            {
+                MessageBox.Show("Veritabanında özellik bulunamadı.", "Uyarı", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
+
+
         }
     }
 }
