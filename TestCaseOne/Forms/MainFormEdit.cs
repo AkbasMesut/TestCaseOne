@@ -94,8 +94,8 @@ namespace TestCaseOne.Forms
                         if (cmd.ExecuteNonQuery() > 0)
                         {
                             MessageBox.Show("Özellik başarıyla eklendi.", "Bilgi", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                            ListeyiYukle();
-                            textBox1.Clear();
+                            _mainForm?.RefreshMainFeaturesAsync();
+                            this.Close();
                         }
                         else
                         {
@@ -170,8 +170,8 @@ namespace TestCaseOne.Forms
                             if (cmd.ExecuteNonQuery() > 0)
                             {
                                 MessageBox.Show("Silme işlemi başarılı!", "Bilgi", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                                ListeyiYukle();
-                                textBox1.Clear();
+                                _mainForm?.RefreshMainFeaturesAsync();
+                                this.Close();
                             }
                             else
                             {

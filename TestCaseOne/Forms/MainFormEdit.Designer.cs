@@ -45,6 +45,7 @@
             this.button1.TabIndex = 1;
             this.button1.Text = "Ekle";
             this.button1.UseVisualStyleBackColor = true;
+            this.button1.Click += new System.EventHandler(this.btnEkle_Click);
             // 
             // button2
             // 
@@ -56,6 +57,7 @@
             this.button2.TabIndex = 1;
             this.button2.Text = "Sil";
             this.button2.UseVisualStyleBackColor = true;
+            this.button2.Click += new System.EventHandler(this.btnSil_Click);
             // 
             // button3
             // 
