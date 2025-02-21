@@ -5,6 +5,7 @@ using System.Data.SQLite;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 using TestCaseOne.Models;
 
 
@@ -22,7 +23,7 @@ namespace TestCaseOne.Repositories
             using (var conn = new SQLiteConnection(connection.ConnectionString))
             {
                 await conn.OpenAsync();
-                var query = "SELECT Id, Name FROM MainFeatures";
+                var query = "SELECT Id,FeatureName FROM MainFeatures";
                 var result = await conn.QueryAsync<MainFeatures>(query);
                 return result.ToList();
             }
@@ -45,10 +46,37 @@ namespace TestCaseOne.Repositories
             using (var conn = new SQLiteConnection(connection.ConnectionString))
             {
                 conn.Open();
-                var query = "SELECT Name FROM MainFeatures";
+                var query = "SELECT FeatureName FROM MainFeatures";
                 return conn.Query<string>(query).ToList();
             }
         }
+
+        public bool UpdateFeatureName(string oldName, string newName)
+        {
+            using (SQLiteConnection con = new SQLiteConnection(connection.ConnectionString))
+            {
+                try
+                {
+                    con.Open();
+                    using (SQLiteCommand cmd = new SQLiteCommand("UPDATE MainFeatures SET FeatureName = @newName WHERE FeatureName COLLATE NOCASE = @oldName", con))
+                    {
+                        cmd.Parameters.AddWithValue("@newName", newName);
+                        cmd.Parameters.AddWithValue("@oldName", oldName);
+
+                        int rowsAffected = cmd.ExecuteNonQuery();
+                        MessageBox.Show($"Güncellenen satır sayısı: {rowsAffected}", "Debug", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+                        return rowsAffected > 0;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("Güncelleme sırasında hata oluştu: " + ex.Message, "Hata", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return false;
+                }
+            }
+        }
+
 
     }
 }

@@ -35,6 +35,7 @@ namespace TestCaseOne.Forms
         }
 
         #region DataGridView Setup
+
         private void SetupDataGridView()
         {
             ConfigureDataGridViewStyle();
@@ -67,10 +68,10 @@ namespace TestCaseOne.Forms
         {
             dataGridView1.Columns.Clear();
             dataGridView1.Columns.Add("Id", "Id");
-            dataGridView1.Columns.Add("Name", "Test İsmi");
+            dataGridView1.Columns.Add("FeatureName", "Test İsmi");
             dataGridView1.Columns.Add("Info", "Açıklama");
             dataGridView1.Columns["Id"].Visible = false;
-            dataGridView1.Columns["Name"].FillWeight = 70;
+            dataGridView1.Columns["FeatureName"].FillWeight = 70;
             dataGridView1.Columns["Info"].FillWeight = 30;
         }
         #endregion
@@ -139,7 +140,7 @@ namespace TestCaseOne.Forms
                     var features = await mainFeaturesRepository.GetAllAsync();
                     foreach (var feature in features)
                     {
-                        CreateFeatureButton(feature.Name, feature.Id);
+                        CreateFeatureButton(feature.FeatureName, feature.Id);
                     }
                 }
             }
@@ -227,15 +228,19 @@ namespace TestCaseOne.Forms
 
             if (featureNames.Count > 0)
             {
-                MainFormEdit listForm = new MainFormEdit(featureNames);
+                MainFormEdit listForm = new MainFormEdit(this, featureNames); // Ana form referansını gönder
                 listForm.ShowDialog();
             }
             else
             {
                 MessageBox.Show("Veritabanında özellik bulunamadı.", "Uyarı", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
-
-
         }
+
+        public async Task RefreshMainFeaturesAsync()
+        {
+            await GetMainFeaturesAsync(); // Butonları güncellemek için mevcut metodu çağır
+        }
+
     }
 }

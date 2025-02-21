@@ -9,7 +9,7 @@ namespace TestCaseOne.Models
     public class MainFeatures
     {
         public int Id { get; set; }
-        public string Name { get; set; }
+        public string FeatureName { get; set; }
 
     }
 }
