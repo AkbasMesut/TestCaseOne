@@ -197,7 +197,7 @@ namespace TestCaseOne.Forms
             dataGridView1.Rows.Clear();
             foreach (var userStori in userStories)
             {
-                dataGridView1.Rows.Add(userStori.Id, userStori.Name, userStori.Result);
+                dataGridView1.Rows.Add(userStori.Id, userStori.UserStoryName, userStori.Result);
             }
             AdjustDataGridViewHeight();
             groupBox1.Visible = dataGridView1.Rows.Count > 0;

@@ -1,6 +1,7 @@
 ﻿using Dapper;
 using System;
 using System.Collections.Generic;
+using System.Data.SQLite;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -17,6 +18,8 @@ namespace TestCaseOne.Repositories
             dataItemList = connection.Query<TestCase>("select * from where UserStoryId = @UserStoryId", parameters).ToList();
             return dataItemList;
         }
+
+
 
     }
 }

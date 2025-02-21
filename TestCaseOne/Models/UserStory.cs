@@ -9,7 +9,7 @@ namespace TestCaseOne.Models
     public class UserStory
     {
         public int Id { get; set; }
-        public string Name { get; set; }
+        public string UserStoryName { get; set; }
         public int MainFeatureId { get; set; }
         public bool Result { get; set; }
         public string Info { get; set; }

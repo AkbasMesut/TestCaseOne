@@ -18,9 +18,19 @@ namespace TestCaseOne.Repositories
             {
                 await conn.OpenAsync();
                 var parameters = new { MainFeatureId = MainFeatureId };
-                var query = "SELECT Id, Name, MainFeatureId, Info, Result AS Result FROM UserStory WHERE MainFeatureId = @MainFeatureId";
+                var query = "SELECT Id, UserStoryName, MainFeatureId, Info, Result AS Result FROM UserStory WHERE MainFeatureId = @MainFeatureId";
                 var dataItemList = await conn.QueryAsync<UserStory>(query, parameters);
                 return dataItemList.ToList();
+            }
+        }
+
+        public List<string> GetUserStoryNames()
+        {
+            using (var conn = new SQLiteConnection(connection.ConnectionString))
+            {
+                conn.Open();
+                var query = "SELECT UserStoryName FROM UserStory";
+                return conn.Query<string>(query).ToList();
             }
         }
     }
