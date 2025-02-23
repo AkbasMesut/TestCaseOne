@@ -68,10 +68,10 @@ namespace TestCaseOne.Forms
         {
             dataGridView1.Columns.Clear();
             dataGridView1.Columns.Add("Id", "Id");
-            dataGridView1.Columns.Add("FeatureName", "Test İsmi");
+            dataGridView1.Columns.Add("UserStoryName", "Test Adı");
             dataGridView1.Columns.Add("Info", "Açıklama");
             dataGridView1.Columns["Id"].Visible = false;
-            dataGridView1.Columns["FeatureName"].FillWeight = 70;
+            dataGridView1.Columns["UserStoryName"].FillWeight = 70;
             dataGridView1.Columns["Info"].FillWeight = 30;
         }
         #endregion
@@ -197,7 +197,7 @@ namespace TestCaseOne.Forms
             dataGridView1.Rows.Clear();
             foreach (var userStori in userStories)
             {
-                dataGridView1.Rows.Add(userStori.Id, userStori.UserStoryName, userStori.Result);
+                dataGridView1.Rows.Add(userStori.Id, userStori.UserStoryName, userStori.Info);
             }
             AdjustDataGridViewHeight();
             groupBox1.Visible = dataGridView1.Rows.Count > 0;
@@ -237,12 +237,27 @@ namespace TestCaseOne.Forms
             }
         }
 
+        private void button7_Click(object sender, EventArgs e)
+        {
+            UserStoryRepositories repo = new UserStoryRepositories();
+            List<string> storyNames = repo.GetUserStoryNames();
+
+            if(storyNames.Count > 0)
+            {
+                UserStoryFormEdit listForm = new UserStoryFormEdit(this, storyNames);
+                listForm.ShowDialog();
+            }
+            else
+            {
+                MessageBox.Show("Veritabanında özellik bulunamadı.", "Uyarı", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
+        }
+
+
         public async Task RefreshMainFeaturesAsync()
         {
             await GetMainFeaturesAsync(); // Butonları güncellemek için mevcut metodu çağır
         }
-
-
 
     }
 }
