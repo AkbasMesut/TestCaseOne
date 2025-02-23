@@ -20,10 +20,15 @@ namespace TestCaseOne.Forms
         {
             InitializeComponent();
             _mainForm = mainForm ?? throw new ArgumentNullException(nameof(mainForm)); // null kontrolü
-            comboBox1.Items.AddRange(storyNames.ToArray());
+            listBox2.Items.AddRange(storyNames.ToArray());
         }
 
         private void UserStoryFormEdit_Load(object sender, EventArgs e)
+        {
+
+        }
+
+        private void listBox2_SelectedIndexChanged(object sender, EventArgs e)
         {
 
         }
