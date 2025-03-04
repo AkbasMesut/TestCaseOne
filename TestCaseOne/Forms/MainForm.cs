@@ -160,7 +160,7 @@ namespace TestCaseOne.Forms
                 ForeColor = Color.Black,
                 Text = featureName,
                 Tag = featureId,
-                Width = 350,
+                Width = 360,
                 Height = 50,
                 Margin = new Padding(0)
             };
