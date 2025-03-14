@@ -21,7 +21,10 @@ namespace TestCaseOne.Forms
         {
             InitializeComponent();
             SetupDataGridView();
-            this.Bounds = Screen.PrimaryScreen.Bounds; // Ekranı tamamen kaplar
+            //this.Bounds = Screen.PrimaryScreen.Bounds; // Ekranı tamamen kaplar
+            // this.FormBorderStyle = FormBorderStyle.None; // Kenarlıkları kaldır
+            this.WindowState = FormWindowState.Maximized; // Formu tam ekran aç
+           // this.StartPosition = FormStartPosition.CenterScreen; // Formu ekranın ortasına getir
         }
 
         private async void MainForm_Load(object sender, EventArgs e)
