@@ -21,10 +21,8 @@ namespace TestCaseOne.Forms
         {
             InitializeComponent();
             SetupDataGridView();
-            //this.Bounds = Screen.PrimaryScreen.Bounds; // Ekranı tamamen kaplar
-            // this.FormBorderStyle = FormBorderStyle.None; // Kenarlıkları kaldır
-            this.WindowState = FormWindowState.Maximized; // Formu tam ekran aç
-           // this.StartPosition = FormStartPosition.CenterScreen; // Formu ekranın ortasına getir
+            AdjustButtonWidths();           
+            this.WindowState = FormWindowState.Maximized; // Formu tam ekran aç           
         }
 
         private async void MainForm_Load(object sender, EventArgs e)
@@ -36,6 +34,25 @@ namespace TestCaseOne.Forms
             await GetMainFeaturesAsync();
             dataGridView1.ClearSelection();
         }
+
+        #region Width of Buttons Setup
+        private void AdjustButtonWidths()
+        {
+            // DataGridView toplam genişliğini al
+            int totalWidth = dataGridView1.Width;
+
+            // Test Case sütunu genişliği (%78) ve Açıklama sütunu genişliği (%22)
+            int testCaseWidth = (int)(totalWidth * 0.78);
+            int infoWidth = (int)(totalWidth * 0.22);
+
+            // Butonların genişliklerini güncelle
+            button7.Width = testCaseWidth;
+            button9.Width = infoWidth;
+
+            // Açıklama butonunu Test Case butonunun yanına hizala
+            button9.Left = button7.Right; 
+        }
+        #endregion
 
         #region DataGridView Setup
 
@@ -74,8 +91,8 @@ namespace TestCaseOne.Forms
             dataGridView1.Columns.Add("UserStoryName", "Test Adı");
             dataGridView1.Columns.Add("Info", "Açıklama");
             dataGridView1.Columns["Id"].Visible = false;
-            dataGridView1.Columns["UserStoryName"].FillWeight = 70;
-            dataGridView1.Columns["Info"].FillWeight = 30;
+            dataGridView1.Columns["UserStoryName"].FillWeight = 79;
+            dataGridView1.Columns["Info"].FillWeight = 21;
         }
         #endregion
 
