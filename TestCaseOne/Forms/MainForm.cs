@@ -33,6 +33,7 @@ namespace TestCaseOne.Forms
             dataGridView1.VirtualMode = false;
             await GetMainFeaturesAsync();
             dataGridView1.ClearSelection();
+            AdjustButtonWidths();
         }
 
         #region Width of Buttons Setup
@@ -91,8 +92,8 @@ namespace TestCaseOne.Forms
             dataGridView1.Columns.Add("UserStoryName", "Test Adı");
             dataGridView1.Columns.Add("Info", "Açıklama");
             dataGridView1.Columns["Id"].Visible = false;
-            dataGridView1.Columns["UserStoryName"].FillWeight = 79;
-            dataGridView1.Columns["Info"].FillWeight = 21;
+            dataGridView1.Columns["UserStoryName"].FillWeight = 78;
+            dataGridView1.Columns["Info"].FillWeight = 22;
         }
         #endregion
 
